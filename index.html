@@ -55,7 +55,7 @@
 
 <button onclick="startScanner()">Scan QR</button>
 
-  <div id="scanner" style="display:none;"></div><button onclick="showAdminPrompt()">Aku adalah Admin</button>
+  <div id="scanner" style="display:none;"></div><button onclick="resetBalance()">Reset Saldo ($1500)</button> <button onclick="showAdminPrompt()">Aku adalah Admin</button> <button id="adminBonusBtn" onclick="generateAdminBonusQR()" style="display:none;">Generate QR Bonus $200</button>
 
   <div class="history">
     <strong>Riwayat Transaksi:</strong>
@@ -66,10 +66,12 @@
   let name = localStorage.getItem('playerName') || '';
   let history = JSON.parse(localStorage.getItem('history') || '[]');
   let lastTransfer = null;
+  let isAdmin = localStorage.getItem('isAdmin') === 'true';
 
   document.getElementById('playerName').value = name;
   document.getElementById('balance').innerText = balance;
   updateHistory();
+  if (isAdmin) document.getElementById('adminBonusBtn').style.display = 'block';
 
   function saveName() {
     name = document.getElementById('playerName').value;
@@ -85,6 +87,13 @@
     const container = document.getElementById('history');
     container.innerHTML = history.slice(-5).map(h => `<div>- ${h}</div>`).join('');
     localStorage.setItem('history', JSON.stringify(history));
+  }
+
+  function resetBalance() {
+    balance = 1500;
+    updateBalanceDisplay();
+    history.push("Saldo direset ke $1500");
+    updateHistory();
   }
 
   function generateReceiveQR() {
@@ -111,6 +120,16 @@
     alert("QR Konfirmasi siap untuk dipindai oleh penerima");
   }
 
+  function generateAdminBonusQR() {
+    const data = JSON.stringify({ type: 'adminBonus', amount: 200 });
+    new QRious({
+      element: document.getElementById("qrCanvas"),
+      value: data,
+      size: 200,
+    });
+    alert("QR Bonus $200 siap untuk dipindai oleh pemain lain");
+  }
+
   function startScanner() {
     const scannerDiv = document.getElementById("scanner");
     scannerDiv.style.display = 'block';
@@ -128,7 +147,7 @@
             try {
               const data = JSON.parse(decodedText);
               const amount = parseInt(data.amount);
-              if (!name || !data.to || !amount || amount <= 0) return alert("QR tidak valid.");
+              if (!name || amount <= 0) return alert("QR tidak valid.");
 
               if (data.type === 'request' && data.to !== name) {
                 if (balance < amount) return alert("Saldo tidak cukup untuk mengirim");
@@ -144,6 +163,12 @@
                 history.push(`Terima $${amount} dari pemain lain`);
                 updateHistory();
                 alert("Transfer diterima!");
+              } else if (data.type === 'adminBonus') {
+                balance += amount;
+                updateBalanceDisplay();
+                history.push(`Menerima bonus admin $${amount}`);
+                updateHistory();
+                alert("Kamu menerima bonus dari admin!");
               } else {
                 alert("QR tidak sesuai.");
               }
@@ -167,6 +192,9 @@
     if (input === "admintonghebat") {
       balance = 99999;
       updateBalanceDisplay();
+      isAdmin = true;
+      localStorage.setItem('isAdmin', 'true');
+      document.getElementById('adminBonusBtn').style.display = 'block';
       alert("Selamat, Anda sekarang adalah BANK!");
     } else {
       alert("Password salah.");
