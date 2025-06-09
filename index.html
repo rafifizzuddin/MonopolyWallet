@@ -55,7 +55,7 @@
 
 <button onclick="startScanner()">Scan QR</button>
 
-  <div id="scanner" style="display:none;"></div><button onclick="resetBalance()">Reset Saldo ($1500)</button> <button onclick="showAdminPrompt()">Aku adalah Admin</button> <button id="adminBonusBtn" onclick="generateAdminBonusQR()" style="display:none;">Generate QR Bonus $200</button>
+  <div id="scanner" style="display:none;"></div><button onclick="confirmResetBalance()">Reset Saldo ($1500)</button> <button onclick="showAdminPrompt()">Aku adalah Admin</button> <button id="adminBonusBtn" onclick="generateAdminBonusQR()" style="display:none;">Generate QR Bonus $200</button>
 
   <div class="history">
     <strong>Riwayat Transaksi:</strong>
@@ -87,6 +87,12 @@
     const container = document.getElementById('history');
     container.innerHTML = history.slice(-5).map(h => `<div>- ${h}</div>`).join('');
     localStorage.setItem('history', JSON.stringify(history));
+  }
+
+  function confirmResetBalance() {
+    if (confirm("Apakah kamu yakin ingin mereset saldo ke $1500?")) {
+      resetBalance();
+    }
   }
 
   function resetBalance() {
